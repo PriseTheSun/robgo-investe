@@ -78,6 +78,12 @@ interface StockQuote {
   previousClose?: number;
   open?: number;
   type: string;
+  sector?: string;
+  industry?: string;
+  description?: string;
+  ibovComparison?: number;
+  dividendYield?: number;
+  impliedDividend?: number;
 }
 
 const ITEMS_PER_PAGE = 9;
@@ -224,7 +230,13 @@ export default function RobGOInveste() {
           week52Low: stock.week52Low || 0,
           previousClose: stock.previousClose || 0,
           open: stock.open || 0,
-          type: stock.type || 'ACAO'
+          type: stock.type || 'ACAO',
+          sector: stock.sector || 'Outros',
+          industry: stock.industry || 'Geral',
+          description: stock.description || stock.symbol,
+          ibovComparison: stock.ibovComparison || 0,
+          dividendYield: stock.dividendYield || 0,
+          impliedDividend: stock.impliedDividend || 0
         }));
         setStocks(formattedStocks);
         generateRecommendations(formattedStocks);
@@ -612,13 +624,30 @@ export default function RobGOInveste() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 mb-4">
+                        <div className="mb-3">
+                          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg uppercase">
+                            {stock.sector}
+                          </span>
+                          <span className={`ml-2 text-[10px] font-bold px-2 py-1 rounded-lg ${(stock.ibovComparison || 0) >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                            {(stock.ibovComparison || 0) >= 0 ? '+' : ''}{(stock.ibovComparison || 0).toFixed(2)}% vs Ibov
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2 mb-4">
                           <div className="bg-gray-50 rounded-xl p-2">
                             <div className="text-[8px] font-bold text-gray-400 uppercase">P/L</div>
                             <div className="text-sm font-black text-gray-700">{stock.peRatio ? stock.peRatio.toFixed(1) : '-'}</div>
                           </div>
                           <div className="bg-gray-50 rounded-xl p-2">
-                            <div className="text-[8px] font-bold text-gray-400 uppercase">Vol. Dia</div>
+                            <div className="text-[8px] font-bold text-gray-400 uppercase">Div.Yield</div>
+                            <div className="text-sm font-black text-gray-700">{(stock.dividendYield || 0).toFixed(1)}%</div>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-2">
+                            <div className="text-[8px] font-bold text-gray-400 uppercase">52 sem</div>
+                            <div className="text-sm font-black text-gray-700">{(stock.week52High || 0).toFixed(0)}</div>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-2">
+                            <div className="text-[8px] font-bold text-gray-400 uppercase">Vol.</div>
                             <div className="text-sm font-black text-gray-700">{stock.volume ? (stock.volume / 1000000).toFixed(1) + 'M' : '-'}</div>
                           </div>
                         </div>
@@ -686,7 +715,7 @@ export default function RobGOInveste() {
 
       <AnimatePresence>
         {simulatingAsset && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100]">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -694,125 +723,92 @@ export default function RobGOInveste() {
               onClick={() => setSimulatingAsset(null)}
               className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
             />
+            
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[85vh] overflow-hidden flex flex-col"
             >
-              <button 
-                onClick={() => setSimulatingAsset(null)}
-                className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full z-10"
-              >
-                <X className="w-6 h-6 text-gray-400" />
-              </button>
-
-              <div className="p-10 md:w-1/2 border-r border-black/5">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black">
-                    {simulatingAsset.ticker.slice(0, 4)}
+              <div className="flex-shrink-0 p-4 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black text-sm">
+                      {simulatingAsset.ticker.slice(0, 4)}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black">{simulatingAsset.ticker}</h3>
+                      <p className="text-xs text-gray-400">{simulatingAsset.name}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-black tracking-tight">{simulatingAsset.ticker}</h3>
-                    <p className="text-xs font-bold text-gray-400 uppercase">{simulatingAsset.name}</p>
-                  </div>
+                  <button 
+                    onClick={() => setSimulatingAsset(null)}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <X className="w-5 h-5 text-gray-400" />
+                  </button>
                 </div>
+              </div>
 
-                <div className="space-y-8">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="bg-blue-50 p-4 rounded-2xl">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <div className="text-2xl font-black">R$ {simulatingAsset.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                      <div className="text-xs text-gray-500">Preço atual</div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-lg text-sm font-bold ${simulatingAsset.change >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                      {simulatingAsset.change >= 0 ? '+' : ''}{simulatingAsset.change.toFixed(2)}%
+                    </div>
+                  </div>
+                  
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3 block">
-                      Valor a Investir (R$)
-                    </label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Valor a Investir</label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
                       <input 
                         type="number" 
                         value={investAmount}
                         onChange={(e) => setInvestAmount(Number(e.target.value))}
-                        className="w-full pl-12 pr-6 py-4 bg-gray-50 border border-black/5 rounded-2xl font-black text-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-lg font-bold"
                       />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
-                      <div className="text-[10px] font-bold text-blue-600 uppercase mb-1">Cotas/Ações</div>
-                      <div className="text-2xl font-black text-blue-900">{sharesCount}</div>
-                    </div>
-                    <div className="bg-emerald-50 p-5 rounded-2xl border border-emerald-100">
-                      <div className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Próximo Provento</div>
-                      <div className="text-2xl font-black text-emerald-900">R$ {totalDividends.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-6 rounded-3xl border border-black/5">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Calendar className="w-5 h-5 text-indigo-600" />
-                      <span className="text-sm font-bold text-gray-700">Agenda de Pagamento</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500">Data Prevista:</span>
-                      <span className="text-sm font-black text-indigo-600">{simulatingAsset.nextPaymentDate}</span>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-black/5 flex items-center justify-between">
-                      <span className="text-xs font-medium text-gray-500">Valor Unitário:</span>
-                      <span className="text-sm font-black text-gray-900">R$ {simulatingAsset.dividendPerShare.toLocaleString('pt-BR', { minimumFractionDigits: 4 })}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-10 md:w-1/2 bg-gray-50/50 flex flex-col">
-                <div className="mb-8">
-                  <h4 className="text-lg font-black tracking-tight mb-1">Crescimento Histórico</h4>
-                  <p className="text-xs text-gray-400 font-medium">Variação do preço nos últimos 6 meses</p>
                 </div>
 
-                <div className="flex-grow min-h-[300px]">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-50 p-3 rounded-xl">
+                    <div className="text-[10px] text-gray-400 uppercase font-bold">Cotas</div>
+                    <div className="text-xl font-black text-blue-600">{sharesCount}</div>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-xl">
+                    <div className="text-[10px] text-gray-400 uppercase font-bold">Provento</div>
+                    <div className="text-xl font-black text-emerald-600">R$ {totalDividends.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                  </div>
+                </div>
+
+                <div className="h-40">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={simulatingAsset.history}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                      <XAxis 
-                        dataKey="month" 
-                        axisLine={false} 
-                        tickLine={false} 
-                        tick={{ fontSize: 10, fontWeight: 700, fill: '#9CA3AF' }}
-                        dy={10}
-                      />
-                      <YAxis 
-                        hide 
-                        domain={['auto', 'auto']} 
-                      />
+                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9CA3AF' }} />
+                      <YAxis hide domain={['auto', 'auto']} />
                       <RechartsTooltip 
-                        contentStyle={{ 
-                          borderRadius: '16px', 
-                          border: 'none', 
-                          boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          fontWeight: 900,
-                          fontSize: '12px'
-                        }}
+                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgb(0 0 0 / 0.1)' }}
                         formatter={(value: any) => [`R$ ${Number(value || 0).toFixed(2)}`, 'Preço']}
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="price" 
-                        stroke="#2563EB" 
-                        strokeWidth={4} 
-                        dot={{ r: 6, fill: '#2563EB', strokeWidth: 3, stroke: '#fff' }}
-                        activeDot={{ r: 8, strokeWidth: 0 }}
-                      />
+                      <Line type="monotone" dataKey="price" stroke="#2563EB" strokeWidth={3} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
-                <div className="mt-8 p-6 bg-white rounded-3xl border border-black/5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <ShieldAlert className="w-5 h-5 text-rose-600" />
-                    <span className="text-sm font-black text-gray-900">Alerta de Risco RobGO</span>
+                <div className="bg-gray-50 p-3 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldAlert className="w-4 h-4 text-rose-500" />
+                    <span className="text-xs font-bold text-gray-700">Análise de Risco</span>
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed italic">
-                    {simulatingAsset.riskAnalysis}
-                  </p>
+                  <p className="text-xs text-gray-500">{simulatingAsset.riskAnalysis}</p>
                 </div>
               </div>
             </motion.div>
