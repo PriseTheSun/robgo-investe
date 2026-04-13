@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* Ativa o dark mode a partir de toggle do provider ao invés do default prefers-color-scheme */
+@custom-variant dark (&:is(.dark *));

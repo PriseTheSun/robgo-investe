@@ -6,7 +6,7 @@ Analista de investimentos inteligente para todos os níveis: Iniciante, Intermed
 
 ## Sobre o Projeto
 
-O RobGO Investe é uma aplicação web desenvolvida com Next.js e React que oferece análises de investimentos impulsionadas por IA (através do Google Gemini). O projeto visa fornecer insights e estratégias de investimento adequadas para diferentes perfis de investidores.
+O RobGO Investe é uma aplicação web desenvolvida com Next.js e React que oferece análises de investimentos impulsionadas por IA (através do Google Gemini). Os dados de cotação das ações são extraídos consumindo a API da plataforma **[brapi.dev](https://brapi.dev/)**. O projeto visa fornecer insights e estratégias de investimento adequadas para diferentes perfis de investidores.
 
 ## Tecnologias Utilizadas
 

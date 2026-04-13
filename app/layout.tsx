@@ -1,6 +1,8 @@
 import type {Metadata} from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import { ThemeProvider } from '../components/theme-provider';
+import { CookieConsent } from '../components/cookie-consent';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -19,8 +21,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body suppressHydrationWarning className="antialiased">{children}</body>
+    <html lang="pt-BR" suppressHydrationWarning className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body suppressHydrationWarning className="antialiased bg-[#F0F2F5] dark:bg-gray-900 transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+          <CookieConsent />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

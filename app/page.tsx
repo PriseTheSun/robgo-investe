@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  TrendingUp, 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
   Sparkles,
   RefreshCw,
   ShieldAlert,
@@ -23,9 +23,9 @@ import {
   Star,
   Trophy
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
+import {
+  LineChart,
+  Line,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -33,6 +33,7 @@ import {
   CartesianGrid
 } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
+import { ThemeToggle } from '../components/theme-toggle';
 
 type InvestorLevel = 'INICIANTE' | 'INTERMEDIARIO' | 'AVANCADO';
 
@@ -110,7 +111,7 @@ export default function RobGOInveste() {
   const [error, setError] = useState<string | null>(null);
   const [simulatingAsset, setSimulatingAsset] = useState<Asset | null>(null);
   const [investAmount, setInvestAmount] = useState<number>(1000);
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,16 +121,16 @@ export default function RobGOInveste() {
 
   const generateRecommendations = (stocksData: StockQuote[]) => {
     const newRecommendations: Record<string, Asset[]> = {};
-    
+
     stocksData.forEach(stock => {
       const price = stock.close || 100;
       const peRatio = stock.peRatio;
       const change = stock.change || 0;
       const marketCap = stock.marketCap || 0;
-      
+
       let riskLevel: 'BAIXO' | 'MEDIO' | 'ALTO';
       let reason: string;
-      
+
       if (peRatio && peRatio < 10 && change > -3 && change < 5) {
         riskLevel = 'BAIXO';
         reason = `P/L atrativo de ${peRatio.toFixed(1)} com fundamentals sólidos. Boa opção para iniciantes.`;
@@ -140,7 +141,7 @@ export default function RobGOInveste() {
         riskLevel = 'ALTO';
         reason = `Alta volatilidade com variação de ${change.toFixed(1)}%. Potencial de ganho elevado.`;
       }
-      
+
       const generateHistory = (basePrice: number, volatility: number) => {
         const months = ['Set', 'Out', 'Nov', 'Dez', 'Jan', 'Fev'];
         let currentPrice = basePrice * (1 - (volatility * 0.3));
@@ -150,9 +151,9 @@ export default function RobGOInveste() {
           return { month, price: currentPrice };
         });
       };
-      
+
       const volatility = riskLevel === 'BAIXO' ? 0.05 : riskLevel === 'MEDIO' ? 0.1 : 0.2;
-      
+
       newRecommendations[stock.symbol] = [
         {
           ticker: stock.symbol,
@@ -162,11 +163,11 @@ export default function RobGOInveste() {
           type: 'ACAO',
           reason,
           riskLevel,
-          riskAnalysis: riskLevel === 'BAIXO' 
+          riskAnalysis: riskLevel === 'BAIXO'
             ? 'Baixa volatilidade, fundamentals sólidos, ideal para longo prazo.'
             : riskLevel === 'MEDIO'
-            ? 'Risco moderado, recomendado para investidores com experiência.'
-            : 'Alta volatilidade, indicado apenas para investidores arrojados.',
+              ? 'Risco moderado, recomendado para investidores com experiência.'
+              : 'Alta volatilidade, indicado apenas para investidores arrojados.',
           level: 'INICIANTE',
           dividendPerShare: (stock.eps || 1) * 0.3,
           nextPaymentDate: '15/04/2026',
@@ -202,7 +203,7 @@ export default function RobGOInveste() {
         }
       ];
     });
-    
+
     setRecommendations(newRecommendations);
   };
 
@@ -212,7 +213,7 @@ export default function RobGOInveste() {
     try {
       const response = await fetch('/api/stocks');
       const data = await response.json();
-      
+
       if (data.results && data.results.length > 0) {
         const formattedStocks: StockQuote[] = data.results.map((stock: any) => ({
           symbol: stock.symbol,
@@ -257,7 +258,7 @@ export default function RobGOInveste() {
 
   const fetchAIAnalysis = async (ticker: string, stockName: string) => {
     if (recommendations[ticker]) return recommendations[ticker];
-    
+
     setLoadingAI(true);
     try {
       const mockRecommendations: Asset[] = [
@@ -325,12 +326,12 @@ export default function RobGOInveste() {
           ]
         }
       ];
-      
+
       setRecommendations(prev => ({
         ...prev,
         [ticker]: mockRecommendations
       }));
-      
+
       return mockRecommendations;
     } catch (err) {
       console.error('Erro ao buscar análise da IA:', err);
@@ -346,19 +347,19 @@ export default function RobGOInveste() {
 
   const filteredStocks = useMemo(() => {
     let result = stocks;
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter(stock => 
+      result = result.filter(stock =>
         stock.symbol.toLowerCase().includes(term) ||
         stock.name.toLowerCase().includes(term)
       );
     }
-    
+
     if (typeFilter !== 'TODOS') {
       result = result.filter(stock => stock.type === typeFilter);
     }
-    
+
     if (riskFilter !== 'TODOS') {
       result = result.filter(stock => {
         const recs = recommendations[stock.symbol];
@@ -367,7 +368,7 @@ export default function RobGOInveste() {
         return relevantRec?.riskLevel === riskFilter;
       });
     }
-    
+
     return result;
   }, [stocks, searchTerm, typeFilter, riskFilter, selectedLevel, recommendations]);
 
@@ -405,8 +406,8 @@ export default function RobGOInveste() {
   const totalDividends = simulatingAsset ? sharesCount * simulatingAsset.dividendPerShare : 0;
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] text-[#1A1A1A] font-sans selection:bg-blue-100">
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-black/5 px-6 py-4">
+    <div className="min-h-screen bg-transparent text-[#1A1A1A] dark:text-gray-100 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 pt-0">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-200">
@@ -414,60 +415,50 @@ export default function RobGOInveste() {
             </div>
             <div>
               <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-800">RobGO Investe</h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-500 font-bold">AI Financial Advisor</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-500 font-bold">Consultor Financeiro</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
-            <button 
-              onClick={fetchStockData}
-              disabled={loading}
-              className="p-2.5 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50 active:scale-95"
-            >
-              <RefreshCw className={`w-5 h-5 text-blue-600 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-            <div className="hidden md:flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-xl shadow-lg shadow-blue-200">
-              <Sparkles className="w-4 h-4 text-white" />
-              <span className="text-xs font-bold text-white">IA RobGO Online</span>
-            </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
         <section className="mb-12">
-          <div className="bg-white rounded-[2.5rem] p-10 border border-black/5 shadow-2xl shadow-blue-900/5 relative overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-10 border border-black/5 dark:border-white/5 shadow-2xl shadow-blue-900/5 dark:shadow-none relative overflow-hidden transition-colors duration-300">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-4">
                 <UserCircle2 className="w-5 h-5 text-blue-600" />
                 <span className="text-sm font-bold text-blue-600 uppercase tracking-widest">Seu Perfil</span>
               </div>
-              <h2 className="text-4xl font-bold mb-4 tracking-tight">Qual seu nível de <span className="text-blue-600">experiência?</span></h2>
-              <p className="text-gray-500 max-w-xl mb-10 text-lg leading-relaxed">
+              <h2 className="text-4xl font-bold mb-4 tracking-tight text-gray-900 dark:text-white transition-colors duration-300">Qual seu nível de <span className="text-blue-600 dark:text-blue-400">experiência?</span></h2>
+              <p className="text-gray-500 dark:text-gray-300 max-w-xl mb-10 text-lg leading-relaxed transition-colors duration-300">
                 A RobGO analisa milhares de dados para encontrar os ativos ideais para o seu momento como investidor.
               </p>
-              
+
               <div className="flex flex-wrap gap-4">
-                <LevelButton 
-                  active={selectedLevel === 'INICIANTE'} 
-                  onClick={() => setSelectedLevel('INICIANTE')} 
-                  label="Iniciante" 
+                <LevelButton
+                  active={selectedLevel === 'INICIANTE'}
+                  onClick={() => setSelectedLevel('INICIANTE')}
+                  label="Iniciante"
                   desc="Segurança e Dividendos"
-                  icon={<ShieldCheck className="w-5 h-5" />} 
+                  icon={<ShieldCheck className="w-5 h-5" />}
                 />
-                <LevelButton 
-                  active={selectedLevel === 'INTERMEDIARIO'} 
-                  onClick={() => setSelectedLevel('INTERMEDIARIO')} 
-                  label="Intermediário" 
+                <LevelButton
+                  active={selectedLevel === 'INTERMEDIARIO'}
+                  onClick={() => setSelectedLevel('INTERMEDIARIO')}
+                  label="Intermediário"
                   desc="Equilíbrio e Valor"
-                  icon={<ShieldEllipsis className="w-5 h-5" />} 
+                  icon={<ShieldEllipsis className="w-5 h-5" />}
                 />
-                <LevelButton 
-                  active={selectedLevel === 'AVANCADO'} 
-                  onClick={() => setSelectedLevel('AVANCADO')} 
-                  label="Avançado" 
+                <LevelButton
+                  active={selectedLevel === 'AVANCADO'}
+                  onClick={() => setSelectedLevel('AVANCADO')}
+                  label="Avançado"
                   desc="Crescimento e Risco"
-                  icon={<ShieldAlert className="w-5 h-5" />} 
+                  icon={<ShieldAlert className="w-5 h-5" />}
                 />
               </div>
             </div>
@@ -479,7 +470,7 @@ export default function RobGOInveste() {
           <section className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <Trophy className="w-6 h-6 text-amber-500" />
-              <h3 className="text-2xl font-bold text-gray-900">Top 5 Recomendados</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Top 5 Recomendados</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {getTop5Recommendations().map((asset, index) => (
@@ -489,15 +480,14 @@ export default function RobGOInveste() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => setSimulatingAsset(asset)}
-                  className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition-transform shadow-xl shadow-blue-200"
+                  className="bg-gradient-to-br from-blue-600 to-indigo-700 p-6 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition-transform shadow-xl shadow-blue-200 dark:shadow-none"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold bg-white/20 px-2 py-1 rounded-lg">#{index + 1}</span>
-                    <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${
-                      asset.riskLevel === 'BAIXO' ? 'bg-emerald-400 text-emerald-900' :
+                    <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${asset.riskLevel === 'BAIXO' ? 'bg-emerald-400 text-emerald-900' :
                       asset.riskLevel === 'MEDIO' ? 'bg-amber-400 text-amber-900' :
-                      'bg-rose-400 text-rose-900'
-                    }`}>
+                        'bg-rose-400 text-rose-900'
+                      }`}>
                       {asset.riskLevel}
                     </span>
                   </div>
@@ -515,29 +505,29 @@ export default function RobGOInveste() {
             <div className="flex items-center gap-3">
               <div className="w-2 h-8 bg-blue-600 rounded-full" />
               <div>
-                <h3 className="text-2xl font-bold text-gray-900">Ativos Disponíveis</h3>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Ativos Disponíveis</h3>
                 {marketData && <span className="text-sm font-medium text-gray-400">Atualizado às {marketData.lastUpdate}</span>}
               </div>
             </div>
-            
+
             <div className="flex flex-wrap gap-3">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
+                <input
                   type="text"
                   placeholder="Buscar ativo..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-3 bg-white border border-black/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                  className="pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-black/5 dark:border-white/5 rounded-2xl text-sm text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-colors duration-300"
                 />
               </div>
-              
+
               <div className="relative">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select 
+                <select
                   value={riskFilter}
                   onChange={(e) => setRiskFilter(e.target.value)}
-                  className="pl-10 pr-8 py-3 bg-white border border-black/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                  className="pl-10 pr-8 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-black/5 dark:border-white/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer transition-colors"
                 >
                   <option value="TODOS">Todos os Riscos</option>
                   <option value="BAIXO">Risco Baixo</option>
@@ -548,10 +538,10 @@ export default function RobGOInveste() {
 
               <div className="relative">
                 <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select 
+                <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="pl-10 pr-8 py-3 bg-white border border-black/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                  className="pl-10 pr-8 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-black/5 dark:border-white/5 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer transition-colors"
                 >
                   <option value="TODOS">Todos os Tipos</option>
                   <option value="ON">Ações ON</option>
@@ -568,10 +558,9 @@ export default function RobGOInveste() {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(9)].map((_, i) => (
-                <div key={i} className="h-64 bg-white rounded-[2rem] border border-black/5 animate-pulse" />
-              ))}
+            <div className="flex flex-col items-center justify-center py-20">
+              <RefreshCw className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin mb-4" />
+              <p className="text-gray-500 dark:text-gray-400 font-bold tracking-widest uppercase text-sm animate-pulse">Carregando ações...</p>
             </div>
           ) : (
             <>
@@ -587,25 +576,24 @@ export default function RobGOInveste() {
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ delay: index * 0.05, type: 'spring', stiffness: 100 }}
                         onClick={() => handleStockClick(stock)}
-                        className="group bg-white rounded-[2rem] p-8 border border-black/5 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 flex flex-col relative overflow-hidden cursor-pointer"
+                        className="group bg-white dark:bg-gray-800 rounded-[2rem] p-8 border border-black/5 dark:border-white/5 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/20 transition-all duration-500 flex flex-col relative overflow-hidden cursor-pointer"
                       >
                         {recommendation && (
-                          <div className={`absolute top-0 right-0 px-6 py-2 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest ${
-                            recommendation.riskLevel === 'BAIXO' ? 'bg-emerald-100 text-emerald-700' :
+                          <div className={`absolute top-0 right-0 px-6 py-2 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest ${recommendation.riskLevel === 'BAIXO' ? 'bg-emerald-100 text-emerald-700' :
                             recommendation.riskLevel === 'MEDIO' ? 'bg-amber-100 text-amber-700' :
-                            'bg-rose-100 text-rose-700'
-                          }`}>
+                              'bg-rose-100 text-rose-700'
+                            }`}>
                             Risco {recommendation.riskLevel}
                           </div>
                         )}
 
                         <div className="flex items-start justify-between mb-6 mt-2">
                           <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shadow-inner bg-blue-50 text-blue-600">
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-lg shadow-inner bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                               {stock.symbol.slice(0, 4)}
                             </div>
                             <div>
-                              <h4 className="font-black text-xl text-gray-900 tracking-tight">{stock.symbol}</h4>
+                              <h4 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">{stock.symbol}</h4>
                               <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter truncate max-w-[120px]">{stock.name}</p>
                             </div>
                           </div>
@@ -613,7 +601,7 @@ export default function RobGOInveste() {
 
                         <div className="flex items-end justify-between mb-4">
                           <div>
-                            <div className="text-3xl font-black text-gray-900">
+                            <div className="text-3xl font-black text-gray-900 dark:text-white transition-colors duration-300">
                               R$ {stock.close.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </div>
                             <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Cotação Atual</div>
@@ -634,32 +622,32 @@ export default function RobGOInveste() {
                         </div>
 
                         <div className="grid grid-cols-4 gap-2 mb-4">
-                          <div className="bg-gray-50 rounded-xl p-2">
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2">
                             <div className="text-[8px] font-bold text-gray-400 uppercase">P/L</div>
-                            <div className="text-sm font-black text-gray-700">{stock.peRatio ? stock.peRatio.toFixed(1) : '-'}</div>
+                            <div className="text-sm font-black text-gray-700 dark:text-gray-300">{stock.peRatio ? stock.peRatio.toFixed(1) : '-'}</div>
                           </div>
-                          <div className="bg-gray-50 rounded-xl p-2">
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2">
                             <div className="text-[8px] font-bold text-gray-400 uppercase">Div.Yield</div>
-                            <div className="text-sm font-black text-gray-700">{(stock.dividendYield || 0).toFixed(1)}%</div>
+                            <div className="text-sm font-black text-gray-700 dark:text-gray-300">{(stock.dividendYield || 0).toFixed(1)}%</div>
                           </div>
-                          <div className="bg-gray-50 rounded-xl p-2">
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2">
                             <div className="text-[8px] font-bold text-gray-400 uppercase">52 sem</div>
-                            <div className="text-sm font-black text-gray-700">{(stock.week52High || 0).toFixed(0)}</div>
+                            <div className="text-sm font-black text-gray-700 dark:text-gray-300">{(stock.week52High || 0).toFixed(0)}</div>
                           </div>
-                          <div className="bg-gray-50 rounded-xl p-2">
+                          <div className="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-2">
                             <div className="text-[8px] font-bold text-gray-400 uppercase">Vol.</div>
-                            <div className="text-sm font-black text-gray-700">{stock.volume ? (stock.volume / 1000000).toFixed(1) + 'M' : '-'}</div>
+                            <div className="text-sm font-black text-gray-700 dark:text-gray-300">{stock.volume ? (stock.volume / 1000000).toFixed(1) + 'M' : '-'}</div>
                           </div>
                         </div>
 
                         {recommendation ? (
                           <div className="space-y-4 flex-grow">
-                            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                              <div className="flex items-center gap-2 mb-2 text-blue-700 font-black uppercase text-[10px] tracking-widest">
+                            <div className="bg-gray-50 dark:bg-gray-700/20 rounded-2xl p-5 border border-gray-100 dark:border-transparent">
+                              <div className="flex items-center gap-2 mb-2 text-blue-700 dark:text-blue-400 font-black uppercase text-[10px] tracking-widest">
                                 <Sparkles className="w-3.5 h-3.5" />
                                 Recomendado para você
                               </div>
-                              <p className="text-xs text-gray-600 leading-relaxed font-medium line-clamp-3">{recommendation.reason}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed font-medium line-clamp-3">{recommendation.reason}</p>
                             </div>
                           </div>
                         ) : (
@@ -668,7 +656,7 @@ export default function RobGOInveste() {
                           </div>
                         )}
 
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             if (recommendation) {
@@ -676,7 +664,7 @@ export default function RobGOInveste() {
                             }
                           }}
                           disabled={!recommendation}
-                          className="mt-8 w-full py-4 bg-gray-900 text-white rounded-2xl text-sm font-black hover:bg-blue-600 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95 shadow-xl shadow-gray-200 group-hover:shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="mt-8 w-full py-4 bg-gray-900 dark:bg-blue-600 text-white rounded-2xl text-sm font-black hover:bg-blue-600 dark:hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group-hover:scale-[1.02] active:scale-95 shadow-xl shadow-gray-200 dark:shadow-none group-hover:shadow-blue-200 dark:group-hover:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Simular Carteira
                           <Calculator className="w-4 h-4 opacity-50" />
@@ -715,36 +703,36 @@ export default function RobGOInveste() {
 
       <AnimatePresence>
         {simulatingAsset && (
-          <div className="fixed inset-0 z-[100]">
-            <motion.div 
+          <div className="fixed inset-0 z-[100] flex flex-col justify-end md:justify-center md:items-center pointer-events-none p-0 md:p-6">
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSimulatingAsset(null)}
-              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-gray-900/60 dark:bg-gray-950/80 backdrop-blur-sm pointer-events-auto"
             />
-            
-            <motion.div 
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl max-h-[85vh] overflow-hidden flex flex-col"
+              className="relative w-full bg-white dark:bg-gray-800 rounded-t-3xl md:rounded-3xl max-h-[85vh] md:max-h-[90vh] md:max-w-3xl overflow-hidden flex flex-col pointer-events-auto shadow-2xl border border-transparent dark:border-gray-700 mx-auto"
             >
-              <div className="flex-shrink-0 p-4 border-b border-gray-100">
+              <div className="flex-shrink-0 p-4 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black text-sm">
+                    <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center font-black text-sm">
                       {simulatingAsset.ticker.slice(0, 4)}
                     </div>
                     <div>
-                      <h3 className="text-lg font-black">{simulatingAsset.ticker}</h3>
+                      <h3 className="text-lg font-black text-gray-900 dark:text-white">{simulatingAsset.ticker}</h3>
                       <p className="text-xs text-gray-400">{simulatingAsset.name}</p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setSimulatingAsset(null)}
-                    className="p-2 hover:bg-gray-100 rounded-full"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                   >
                     <X className="w-5 h-5 text-gray-400" />
                   </button>
@@ -752,39 +740,39 @@ export default function RobGOInveste() {
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                <div className="bg-blue-50 p-4 rounded-2xl">
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-2xl font-black">R$ {simulatingAsset.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                      <div className="text-xs text-gray-500">Preço atual</div>
+                      <div className="text-2xl font-black text-gray-900 dark:text-white">R$ {simulatingAsset.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Preço atual</div>
                     </div>
-                    <div className={`px-3 py-1 rounded-lg text-sm font-bold ${simulatingAsset.change >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                    <div className={`px-3 py-1 rounded-lg text-sm font-bold ${simulatingAsset.change >= 0 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>
                       {simulatingAsset.change >= 0 ? '+' : ''}{simulatingAsset.change.toFixed(2)}%
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase">Valor a Investir</label>
                     <div className="relative mt-1">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={investAmount}
                         onChange={(e) => setInvestAmount(Number(e.target.value))}
-                        className="w-full pl-8 pr-3 py-2 bg-white border border-gray-200 rounded-lg font-bold"
+                        className="w-full pl-8 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 p-3 rounded-xl">
+                  <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-xl border border-transparent dark:border-gray-700/50">
                     <div className="text-[10px] text-gray-400 uppercase font-bold">Cotas</div>
-                    <div className="text-xl font-black text-blue-600">{sharesCount}</div>
+                    <div className="text-xl font-black text-blue-600 dark:text-blue-400">{sharesCount}</div>
                   </div>
-                  <div className="bg-gray-50 p-3 rounded-xl">
+                  <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-xl border border-transparent dark:border-gray-700/50">
                     <div className="text-[10px] text-gray-400 uppercase font-bold">Provento</div>
-                    <div className="text-xl font-black text-emerald-600">R$ {totalDividends.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                    <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">R$ {totalDividends.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                   </div>
                 </div>
 
@@ -794,7 +782,7 @@ export default function RobGOInveste() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                       <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9CA3AF' }} />
                       <YAxis hide domain={['auto', 'auto']} />
-                      <RechartsTooltip 
+                      <RechartsTooltip
                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgb(0 0 0 / 0.1)' }}
                         formatter={(value: any) => [`R$ ${Number(value || 0).toFixed(2)}`, 'Preço']}
                       />
@@ -803,12 +791,12 @@ export default function RobGOInveste() {
                   </ResponsiveContainer>
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-xl">
+                <div className="bg-gray-50 dark:bg-gray-700/30 p-3 rounded-xl border border-transparent dark:border-gray-700/50">
                   <div className="flex items-center gap-2 mb-2">
                     <ShieldAlert className="w-4 h-4 text-rose-500" />
-                    <span className="text-xs font-bold text-gray-700">Análise de Risco</span>
+                    <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Análise de Risco</span>
                   </div>
-                  <p className="text-xs text-gray-500">{simulatingAsset.riskAnalysis}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{simulatingAsset.riskAnalysis}</p>
                 </div>
               </div>
             </motion.div>
@@ -816,21 +804,21 @@ export default function RobGOInveste() {
         )}
       </AnimatePresence>
 
-      <footer className="mt-20 border-t border-black/5 bg-white py-16 px-6">
+      <footer className="mt-20 border-t border-black/5 dark:border-white/5 bg-white dark:bg-gray-900 py-16 px-6 transition-colors duration-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 items-center">
           <div className="flex items-center gap-3">
             <BrainCircuit className="w-8 h-8 text-blue-600" />
             <span className="font-black text-2xl tracking-tighter">RobGO Investe</span>
           </div>
           <div className="flex justify-center gap-10 text-xs font-black uppercase tracking-widest text-gray-400">
-            <a href="#" className="hover:text-blue-600 transition-colors">Termos</a>
-            <a href="#" className="hover:text-blue-600 transition-colors">Privacidade</a>
-            <a href="#" className="hover:text-blue-600 transition-colors">Suporte</a>
+            <a href="/termos" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Termos</a>
+            <a href="/privacidade" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacidade</a>
+            <a href="/suporte" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Suporte</a>
           </div>
           <div className="text-[10px] text-gray-400 leading-relaxed text-center md:text-right font-medium">
-            RobGO Investe é uma plataforma de inteligência artificial. 
+            RobGO Investe é uma plataforma de inteligência artificial.
             Investimentos envolvem riscos. Rentabilidade passada não é garantia de futuro.
-            © 2024 RobGO Labs.
+            © 2026 RobGO Labs.
           </div>
         </div>
       </footer>
@@ -842,11 +830,10 @@ function LevelButton({ active, onClick, label, desc, icon }: { active: boolean, 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-start gap-1 px-8 py-5 rounded-[2rem] transition-all duration-300 text-left min-w-[200px] ${
-        active 
-          ? 'bg-blue-600 text-white shadow-2xl shadow-blue-200 scale-105' 
-          : 'bg-white text-gray-500 hover:bg-blue-50 border border-black/5'
-      }`}
+      className={`flex flex-col items-start gap-1 px-8 py-5 rounded-[2rem] transition-all duration-300 text-left min-w-[200px] ${active
+        ? 'bg-blue-600 text-white shadow-2xl shadow-blue-200 dark:shadow-none scale-105'
+        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 border border-black/5 dark:border-white/5'
+        }`}
     >
       <div className="flex items-center gap-2 mb-1">
         {icon}
