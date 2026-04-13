@@ -754,12 +754,18 @@ export default function RobGOInveste() {
                   <div>
                     <label className="text-[10px] font-bold text-gray-400 uppercase">Valor a Investir</label>
                     <div className="relative mt-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">R$ </span>
                       <input
-                        type="number"
-                        value={investAmount}
-                        onChange={(e) => setInvestAmount(Number(e.target.value))}
-                        className="w-full pl-8 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        type="text"
+                        inputMode="numeric"
+                        value={investAmount === 0 ? '' : investAmount.toLocaleString('pt-BR')}
+                        onChange={(e) => {
+                          const rawValue = e.target.value.replace(/\D/g, '');
+                          const num = Number(rawValue);
+                          setInvestAmount(Math.min(num, 1000000));
+                        }}
+                        placeholder="0"
+                        className="w-full pl-10 pr-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
                       />
                     </div>
                   </div>
