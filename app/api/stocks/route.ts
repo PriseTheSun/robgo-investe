@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const TOKEN = 'nrwKfiBPPpuVf5YWPY9Fkr';
+const TOKEN = process.env.BRAPI_TOKEN || '';
 
 const COMPANY_INFO: Record<string, { sector: string; industry: string; description: string }> = {
   'PETR4': { sector: 'Petroleo e Gas', industry: 'Integrada', description: 'Petroleo Brasileiro SA - maior empresa nacional' },
